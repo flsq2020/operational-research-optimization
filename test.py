@@ -16,6 +16,6 @@ Z = np.array([-3, 1, 1])
 restrict = ['<=', '>=', '=']
 
 
-if '__main__' == __name__:
+if __name__ == '__main__':
     optimal = SimplexAlgorithm(A, B, Z, restrict).run()
     print(optimal)
