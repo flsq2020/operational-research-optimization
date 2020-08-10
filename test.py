@@ -1,5 +1,5 @@
 import numpy as np
-from simplex_algorithm import SimplexAlgorithm
+from linear_programming.simplex_algorithm import SimplexAlgorithm
 
 
 # object  min Z = -3 * x1 + x2 + x3
@@ -9,27 +9,28 @@ from simplex_algorithm import SimplexAlgorithm
 #   2 * x1 -              x3 = -1
 #   x_i >= 0 (i = 1,2,3)
 
-#
-A = np.array([[1, -2, 1], [-4, 1, 2], [2, 0, -1]])
-B = np.array([11, 3, -1])
-Z = np.array([-3, 1, 1])  # min
-restrict = ['<=', '>=', '=']
-mode = 'min'
+# A = np.array([[1, -2, 1], [-4, 1, 2], [2, 0, -1]])
+# B = np.array([11, 3, -1])
+# Z = np.array([-3, 1, 1])  # min
+# restrict = ['<=', '>=', '=']
+# mode = 'min'
 
 
 # A = np.array([[-1, 2], [0, 1]])
 # B = np.array([2, 3])
 # Z = np.array([1, 2]) # max
 # restrict = ['<=', '<=']
+# mode = 'max'
 
 # A = np.array([[1, 2, 2, 1, 0], [3, 4, 1, 0, 1]])
 # B = np.array([8, 7])
-# Z = np.array([5, 2, 3, -1, 1])    # max
+# Z = np.array([5, 2, 3, -1, 1])
 # restrict = ['=', '=']
+# mode = 'max'
 
 # A = np.array([[-2, 2, 1, 0], [3, 1, 0, 1]])
 # B = np.array([4, 6])
-# Z = np.array([3, 1, 1, 1])    # min
+# Z = np.array([3, 1, 1, 1])
 # restrict = ['=', '=']
 # mode = 'min'
 
@@ -37,12 +38,15 @@ mode = 'min'
 # B = np.array([100, 80])
 # Z = np.array([10, 5])    # max
 # restrict = ['<=', '<=']
+# mode = 'max'
 
-# A = np.array([[1, 0], [1, 2], [0, 1]])
-# B = np.array([5, 10, 4])
-# Z = np.array([1, 3])    # max
-# restrict = ['<=', '<=', '<=']
+A = np.array([[1, 0], [1, 2], [0, 1]])
+B = np.array([5, 10, 4])
+Z = np.array([1, 3])    # max
+restrict = ['<=', '<=', '<=']
+mode = 'max'
 
 if __name__ == '__main__':
-    optimal = SimplexAlgorithm(A, B, Z, mode, restrict).run()
-    print(optimal)
+    x, optimal = SimplexAlgorithm(A, B, Z, mode, restrict).run()
+    print('最优解', x)
+    print('目标函数最优值', optimal[0])
