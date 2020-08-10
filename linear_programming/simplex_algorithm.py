@@ -11,7 +11,7 @@ class SimplexAlgorithm:
         self.mode = mode
         self.restrict = restrict
         self.x_restrict = x_restrict
-        self.param = []
+        self.X = None
         self.optimal = 0
 
     def __str__(self):
@@ -19,11 +19,11 @@ class SimplexAlgorithm:
 
     def run(self):
         if check_standard_linear_programming(self.B, self.restrict):
-            self.optimal = simplex_algorithm(self.A, self.B, self.Z, self.mode)
+            self.X, self.optimal = simplex_algorithm(self.A, self.B, self.Z, self.mode)
         else:
             A, B, Z = transform_standard_linear_programming(self.A, self.B, self.Z, self.restrict)
-            self.optimal = simplex_algorithm(A, B, Z, self.mode)
-        return self.optimal
+            self.X, self.optimal = simplex_algorithm(A, B, Z, self.mode)
+        return self.X, self.optimal
 
 
 def check_standard_linear_programming(b, restrict):
@@ -80,7 +80,6 @@ def basic_new_old_by_check_number(a, b, check, basic_table, mode):
     b_div_a[np.isinf(b_div_a)] = m_value
     b_div_a[b_div_a <= 0] = m_value
     out = b_div_a.tolist().index(min(b_div_a))
-    print(dict(basic_table))
     old = dict(basic_table)[out]
     return new, old, out, flag
 
@@ -114,7 +113,13 @@ def simplex_algorithm(a, b, z, mode='min'):
     if not isinstance(z, np.ndarray):
         z = np.array(z)
     a, b, z, object_v, _ = simplex(a, b, z, mode, '')
-    return object_v
+    x = None
+    if object_v:
+        basic_variable = [basic_v[-1] for basic_v in search_basic_variable(a)]
+        x = np.zeros(variables)
+        x[basic_variable] = b.flatten()
+        x = x[list(map(bool, z))]
+    return x, object_v
 
 
 def bigMsimplex(a, b, z, mode):
