@@ -56,9 +56,9 @@ def transform_standard_linear_programming(a, b, z, restrict):
 
 
 def search_basic_variable(a):
-    func = lambda x: True if len(x[1]) == 0 else False
+    func = lambda x: True if len(x[1][0]) == 0 and x[1][1] == 1 else False
     # 找到所有基变量所在列
-    basic_col_index = list(filter(func, enumerate([set(row) - {0, 1} for row in a.T])))
+    basic_col_index = list(filter(func, enumerate([(set(row) - {0, 1}, sum(row))for row in a.T])))
     basic_col_index = [col_index[0] for col_index in basic_col_index]
     # 找到所有基变量所在行
     basic_row_index = np.array([np.argwhere(a == 1).flatten() for a in a.T])[basic_col_index]
@@ -70,16 +70,17 @@ def search_basic_variable(a):
 def basic_new_old_by_check_number(a, b, check, basic_table, mode):
     flag = True
     func = {'min': min, 'max': max}
-    m_value = {'min': 1e5, 'max': -1e5}
+    m_value = 1e6
     new = check.index(func[mode](check))
     if b.ndim == 2:
         b = np.squeeze(b)
     b_div_a = b / a[:, new]
     if all(a[:, new] <= 0):
         flag = False
-    b_div_a[np.isinf(b_div_a)] = m_value[mode]
-    b_div_a[b_div_a <= 0] = m_value[mode]
+    b_div_a[np.isinf(b_div_a)] = m_value
+    b_div_a[b_div_a <= 0] = m_value
     out = b_div_a.tolist().index(min(b_div_a))
+    print(dict(basic_table))
     old = dict(basic_table)[out]
     return new, old, out, flag
 
