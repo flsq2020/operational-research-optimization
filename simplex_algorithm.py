@@ -167,6 +167,7 @@ def simplex(a, b, z, mode, stop_condition='M'):
         if not flag:
             print('线性规划问题无解')
             is_solution = False
+            object_v = None
             break
         print('新基本变量', new)
         print('被替换的基本变量', old)
