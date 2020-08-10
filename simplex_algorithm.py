@@ -67,6 +67,7 @@ def search_basic_variable(a):
 
 
 def basic_new_old_by_check_number(a, b, check, basic_table, mode='min'):
+    flag = True
     func = {'min': min, 'max': max}
     m_value = {'min': 1e5, 'max': -1e5}
 
@@ -74,11 +75,13 @@ def basic_new_old_by_check_number(a, b, check, basic_table, mode='min'):
     if b.ndim == 2:
         b = np.squeeze(b)
     b_div_a = b / a[:, new]
+    if all(a[:, new] <= 0):
+        flag = False
     b_div_a[np.isinf(b_div_a)] = m_value[mode]
     b_div_a[b_div_a <= 0] = m_value[mode]
     out = b_div_a.tolist().index(func[mode](b_div_a))
     old = dict(basic_table)[out]
-    return new, old, out
+    return new, old, out, flag
 
 
 def rotation_transform(rotation, base_equ, basic_v):
@@ -107,7 +110,7 @@ def simplex_algorithm(a, b, z):
             z = np.array(z)
         basic_v_list = search_basic_variable(a)
         # 单纯形
-        a, b, z, object_v = simplex(a, b, z, basic_v_list, stop_condition=2)
+        a, b, z, object_v = simplex(a, b, z, basic_v_list, '')
     else:
         pass
     return object_v
@@ -127,25 +130,26 @@ def bigMsimplex(a, b, z):
     # 基变量索引
     basic_v_list = basic_v_list + list(zip(artificial_row, artificial_col))
     # 单纯形
-    a, b, w, _ = simplex(a, b, w, basic_v_list, 1)
+    a, b, w, _ = simplex(a, b, w, basic_v_list)
     # 删除人工变量
     a = a[:, :variables]
     return a, b, z
 
 
-def simplex(a, b, w, basic_v_list,stop_condition=1):
+def simplex(a, b, z, basic_v_list, stop_condition='M'):
     while True:
         print("===============")
         c_b = [v[-1] for v in basic_v_list]
         print('系数矩阵')
         print(a)
-        print('基本变量',c_b)
-        print('基本变量系数',w[c_b])
+        print('基本变量', c_b)
+        print('基本变量系数', z[c_b])
         # 目标值
-        object_v = np.dot(w[c_b], b.reshape(-1,1))
-        print('目标函数值',object_v)
-        c = [(w[i] - np.dot(w[c_b], a[:,i:i+1]))[0] for i in range(a.shape[-1])]
-        if stop_condition == 1:
+        object_v = np.dot(z[c_b], b.reshape(-1, 1))
+        print('目标函数值', object_v)
+        # 计算所有检验数
+        c = [(z[i] - np.dot(z[c_b], a[:, i:i+1]))[0] for i in range(a.shape[-1])]
+        if stop_condition == 'M':
             if object_v == 0:
                 print("人工变量已经全部成为非基本变量.")
                 break
@@ -153,22 +157,24 @@ def simplex(a, b, w, basic_v_list,stop_condition=1):
             if min(c) >= 0:
                 print("已经取得最优值.")
                 break
-        # 计算所有检验数
-        c = [(w[i] - np.dot(w[c_b], a[:,i:i+1]))[0] for i in range(a.shape[-1])]
-        print('所有检验数',c)
-        print('常数列',b)
+
+        print('所有检验数', c)
+        print('常数列', b)
         # 选最小检验数变量, 新变量入基，旧基变量出基
-        new, old, out = basic_new_old_by_check_number(a, b, c, basic_v_list)
-        print('新基本变量',new)
-        print('被替换的基本变量',old)
+        new, old, out, flag = basic_new_old_by_check_number(a, b, c, basic_v_list)
+        if not flag:
+            print('线性规划问题无解')
+            return a, b, z, 0
+        print('新基本变量', new)
+        print('被替换的基本变量', old)
         # 旋转变换
-        rotation = np.hstack([a,b.reshape(-1,1)])
+        rotation = np.hstack([a, b.reshape(-1, 1)])
         rotation = rotation_transform(rotation, out, new)
         print('rotation transform')
         print(rotation)
-        a, b = rotation[:,:-1], rotation[:,-1:]
-        print('更新基变量坐标')
-        print(update_basic(basic_v_list, old, new))
+        a, b = rotation[:, :-1], rotation[:, -1:]
         # 更新basic_v_list
         basic_v_list = update_basic(basic_v_list, old, new)
+        print('更新基变量坐标')
+        print(basic_v_list)
     return a, b, z, object_v
